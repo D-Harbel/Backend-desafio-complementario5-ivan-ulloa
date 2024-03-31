@@ -3,41 +3,49 @@ const upload = require('../utils/multer');
 
 
 class userController {
+    constructor() {
+        this.changeUserRole = this.changeUserRole.bind(this);
+    }
     async changeUserRole(req, res) {
         const userId = req.params.uid;
-        let newRole;
-
+        const { role } = req.body;
+    
         try {
-            const userRole = await UserModel.findById(userId);
-
-            if (!userRole) {
+            const user = await UserModel.findById(userId);
+    
+            if (!user) {
                 return res.status(404).json({ error: 'Usuario no encontrado' });
             }
-
-            newRole = userRole.role === 'user' ? 'premium' : 'user';
-
-            if (newRole !== "user" && newRole !== "premium") {
-                return res.status(400).json({ error: 'Rol de usuario no válido' });
+    
+            if (role === 'premium' && user.role !== 'user') {
+                return res.status(400).json({ error: 'El usuario ya es premium' });
             }
-
-            const updatedUser = await UserModel.findByIdAndUpdate(userId, { role: newRole }, { new: true });
-
-            if (!updatedUser) {
-                return res.status(404).json({ error: 'Usuario no encontrado' });
+    
+            if (role === 'premium' && !this.hasAllDocuments(user)) {
+                return res.status(400).json({ error: 'El usuario no ha cargado todos los documentos requeridos' });
             }
-
+    
+            const updatedUser = await UserModel.findByIdAndUpdate(userId, { role }, { new: true });
+    
             return res.status(200).json(updatedUser);
         } catch (error) {
             console.error(`Error al cambiar el rol del usuario con ID ${userId}:`, error);
             res.status(500).json({ error: 'Error interno del servidor' });
         }
     }
+    
+    hasAllDocuments(user) {
+        const requiredDocuments = ['identificacion.png', 'comprobante de domicilio.jpg','comprobante de estado de cuenta.png'];
+        const uploadedDocuments = user.documents.map(doc => doc.name);
+        
+        return requiredDocuments.every(doc => uploadedDocuments.includes(doc));
+    }
 
     async uploadDocuments(req, res) {
         const userId = req.params.uid;
     
         try {
-            const uploadedFiles = req.files.map(file => ({ fileName: file.filename, filePath: file.path }));
+            const uploadedFiles = req.files.map(file => ({ name: file.originalname, reference: file.path }));
     
             const updatedUser = await UserModel.findByIdAndUpdate(
                 userId,
