@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Time Products</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+
+<body>
+    <h1>Lista de Productos en Tiempo Real</h1>
+    <ul id="real-time-list">
+            {{#each products.payload}}
+    <li>
+        {{this.title}} - {{this.category}}
+    </li>
+    {{/each}}
+    </ul>
+
+<script>
+    const socket = io();
+    const list = document.getElementById('real-time-list');
+
+    function addProductToList(product) {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${product.title} - ${product.description}`;
+
+        listItem.setAttribute('data-id', product._id);
+
+        list.appendChild(listItem);
+    }
+
+    function removeProductFromList(productId) {
+        const deletedProduct = list.querySelector(`li[data-id="${productId}"]`);
+        if (deletedProduct) {
+            list.removeChild(deletedProduct);
+        }
+    }
+
+    socket.on('updateProducts', (response) => {
+        console.log('Update products:', response);
+
+        list.innerHTML = '';
+
+        if (response && response.status === 'success' && Array.isArray(response.payload)) {
+            const products = response.payload;
+
+            products.forEach((product) => {
+                addProductToList(product);
+            });
+        } else {
+            console.error('La respuesta no tiene la estructura esperada:', response);
+        }
+    });
+
+    socket.on('productCreated', (data) => {
+        if (data && data.product !== undefined) {
+            console.log('Nuevo producto:', data.product);
+
+            addProductToList(data.product);
+        } else {
+            console.error('Error: data o data.product es undefined.');
+        }
+    });
+
+    socket.on('productDeleted', (data) => {
+        if (data && data.productId !== undefined) {
+            console.log('Producto eliminado:', data.productId);
+
+            removeProductFromList(data.productId);
+        } else {
+            console.error('Error: data o data.productId es undefined.');
+        }
+    });
+</script>
+</body>
+
+</html>

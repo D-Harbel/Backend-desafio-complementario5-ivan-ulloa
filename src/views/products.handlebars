@@ -1,0 +1,69 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<h1>Bienvenido, {{usuario.first_name}} {{usuario.last_name}} - Rol: {{usuario.role}}</h1>
+<h2>Lista de Productos</h2>
+<div id="userRole" data-role="{{usuario.cartID}}"></div>
+<div id="userEmail" data-Email="{{usuario.email}}"></div>
+<ul>
+    {{#each products.payload}}
+    <li>
+        nombre: {{this.title}} - categoria: {{this.category}} - precio:{{this.price}}
+        <button class="addToCartBtn" onclick="addToCart('{{this._id}}', '{{this.title}}', '{{this.owner}}')" disabled>Agregar al
+            carrito</button>
+        <hr> <br>
+    </li>
+    {{/each}}
+</ul>
+
+{{#if products.hasPrevPage}}
+<a href="?page={{products.prevPage}}&limit={{products.limit}}">Página Anterior</a>
+{{/if}}
+
+{{#if products.hasNextPage}}
+<a href="?page={{products.nextPage}}&limit={{products.limit}}">Página Siguiente</a>
+{{/if}}
+
+<script>
+
+    const userRole = document.getElementById('userRole').getAttribute('data-role');
+    const socket = io();
+
+    socket.on('connect', () => {
+        console.log('Conectado al servidor');
+        enableButtons();
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Desconectado del servidor');
+        disableButtons();
+    });
+
+    function enableButtons() {
+        const buttons = document.getElementsByClassName('addToCartBtn');
+        for (const button of buttons) {
+            button.removeAttribute('disabled');
+        }
+    }
+
+    function disableButtons() {
+        const buttons = document.getElementsByClassName('addToCartBtn');
+        for (const button of buttons) {
+            button.setAttribute('disabled', 'true');
+        }
+    }
+    
+
+function addToCart(productId, productName, productOwner) {
+    const userEmail = document.getElementById('userEmail').getAttribute('data-Email');
+
+    if (userEmail === productOwner) {
+        console.log('Eres el propietario de este producto, no puedes agregarlo a tu');
+        return;
+    }
+
+    if (typeof socket !== 'undefined' && socket.connected) {
+        socket.emit('addToCart', { productId, productName, userRole });
+    } else {
+        console.error('Socket no definido o no conectado');
+    }
+}
+</script>

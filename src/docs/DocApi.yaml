@@ -1,0 +1,387 @@
+securitySchemes:
+  SessionAuth:
+    type: apiKey
+    in: cookie
+    name: connect.sid
+
+
+paths:
+  /api/products:
+    get:
+      summary: Obtiene todos los productos
+      tags:
+        - Productos
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: catidad maxima de productos a mostrar por pagina
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Pagina de resultados
+        - in: query
+          name: sort
+          schema:
+            type: integer
+          description: Campo para ordenar los productos ('asc' para ascendente, 'desc' para descendente)
+      responses:
+        "200":
+          description: Lista de productos obtenida exitosamente
+        "500":
+          description: Error interno del servidor
+    post:
+      summary: Agregar un nuevo producto
+      description: Ruta protegida, solo el ADMIN o usuarios PREMIUM pueden acceder. iniciar sesion con el rol correspodiente antes de realizar pruebas
+      security:
+        - SessionAuth: []
+      tags:
+        - Productos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Titulo del producto
+                description:
+                  type: string
+                  description: Descripcion del producto
+                code:
+                  type: string
+                  description: Codigo del producto
+                price:
+                  type: number
+                  description: Precio del producto
+                stock:
+                  type: integer
+                  description: Stock del producto
+                category:
+                  type: string
+                  description: Categoria del producto
+                thumbnails:
+                  type: array
+                  items:
+                    type: string
+                  descripcion: URLs de las imagenes del producto
+      responses:
+        "201":
+          description: Producto agregado exitosamente
+        "400":
+          description: Error en los datos proporcionados
+        "403":
+          description: Solo pueden acceder los usuarios con rol ADMIN o PREMIUM.
+        "500":
+          description: Error interno del servidor
+  /api/products/{id}:
+    get:
+      summary: Obtener un producto por su ID
+      tags:
+        - Productos
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID del producto a obtener
+      responses:
+        "200":
+          description: Producto encontrado
+        "404": 
+          description: Producto no encontrado
+        "500":
+          description: Error interno del servidor
+    put:
+      summary: Actualizar un producto existente
+      description: Ruta protegida, solo el ADMIN o usuarios PREMIUM pueden acceder. iniciar sesion con el rol correspodiente antes de realizar pruebas
+      tags:
+        - Productos
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID del producto a actualizar
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Nuevo titulo del producto
+                description:
+                  type: string
+                  description: NUeva descripcion del producto
+                code:
+                  type: string
+                  description: Nuevo codigo del producto
+                price:
+                  type: number
+                  description: Nuevo precio del producto
+                stock:
+                  type: integer
+                  description: Nuevo stock del producto
+                category:
+                  type: string
+                  description: Nueva categoria del producto
+                thumbnails:
+                  type: array
+                  items:
+                    type: string
+                  description: Nuevas URLs de las imagenes del producto
+      security:
+        - SessionAuth: []
+      responses:
+        "200":
+          description: Producto actualizado exitosamente
+        "400":
+          description: Error en los datos proporcionados
+        "403":
+          description: No tienes permiso para actualizar este producto, pertenece a otro usuario
+        "404":
+          description: Producto no encontrado
+        "500":
+          description: error interno del servidor
+    delete:
+      summary: Eliminar un producto existente
+      description: Ruta protegida, solo el ADMIN o usuarios PREMIUM pueden acceder. iniciar sesion con el rol correspodiente antes de realizar pruebas
+      tags:
+        - Productos
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID del producto a eliminar
+      security:
+        - SessionAuth: []
+      responses:
+        "200":
+          description: Producto eliminado exitosamente
+        "403":
+          description: Permiso denegado, intentas eliminar el producto de otro usuario
+        "404":
+          description: Producto no encontrado
+        "500":
+          description: Error interno del servidor
+  /api/carts:
+    post:
+      summary: Crear un nuevo carrito de compras
+      tags: 
+        - Carrito
+      responses:
+        "201":
+          description: Carrito creado exitosamente
+        "500":
+          description: Error interno del servidor
+  /api/carts/{cid}:
+    get:
+      summary: Obtener el contenido de un carrito de compras por su ID
+      tags:
+        - Carrito
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          schema:
+            type: string
+          description: ID del carrito de compras
+      responses:
+        "200":
+          description: Contenido del carrito 
+        "404":
+          description: Carrito no encontrado
+        "500":
+          description: Error interno del servidor
+    put:
+      summary: Actualizar carrito por ID
+      tags:
+        - Carrito
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          description: ID del carrito que se desea actualizar
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                products:
+                  type: array
+                  description: Lista de productos en el carrito con sus cantidades actualizadas
+                  items:
+                    type: object
+                    properties:
+                      product:
+                        type: string
+                        description: ID del producto que se desea agregar al carrito
+                      quantity:
+                        type: integer
+                        description: Cantidad del producto que se desea actualizar en el carrito
+      responses:
+        "200":
+          description: Carrito actualizado exitosamente
+        "500":
+          description: Error interno del servidor
+    delete:
+      summary: Eliminar todos los productos de un carrito
+      tags:
+        - Carrito
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          description: ID del carrito del que se eliminarán todos los productos.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Todos los productos del carrito fueron eliminados exitosamente.
+        "404":
+          description: Carrito no encontrado.
+        "500":
+          description: Error interno del servidor.
+  /api/carts/{cid}/products:
+    post:
+      summary: Agregar un producto al carrito
+      description: Ruta protegida, solo usuarios PREMIUM o USER pueden acceder. iniciar sesion con el rol correspodiente antes de realizar pruebas
+      security:
+        - SessionAuth: []
+      tags:
+        - Carrito
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          schema:
+            type: string
+          description: ID del carrito al que agregar el producto
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              productId:
+                type: string
+                description: ID del producto a agregar
+              quantity:
+                type: integer
+                description: Cantidad del producto a agregar
+      responses:
+        '201':
+          description: Producto agregado al carrito
+        '403':
+          description: No se puedes agregar un producto que te pertence
+        '404':
+          description: Carrito no encontrado
+        '500':
+          description: Error interno del servidor
+  /api/carts/{cid}/products/{pid}:
+    delete:
+      summary: Eliminar un producto del carrito
+      description: Ruta protegida, solo usuarios PREMIUM o USER pueden acceder. iniciar sesion con el rol correspodiente antes de realizar pruebas
+      security:
+        - SessionAuth: []
+      tags:
+        - Carrito
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          schema:
+            type: string
+          description: ID del carrito
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto en el carrito a eliminar
+      responses:
+        '200':
+          description: Producto eliminado del carrito exitosamente
+        '403':
+          description: Solo pueden acceder los usuario con rol USER o PREMIUM.
+        '500':
+          description: Error interno del servidor
+    put:
+      summary: Actualizar la cantidad de un producto en el carrito
+      description: Ruta protegida, solo usuarios PREMIUM o USER pueden acceder. iniciar sesion con el rol correspodiente antes de realizar pruebas
+      security:
+        - SessionAuth: []
+      tags: 
+        - Carrito
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          schema:
+            type: string
+          description: ID del carrito
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto en el carrito a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: integer
+                  description: Nueva cantidad del producto en el carrito
+      responses:
+        "200":
+          description: Cantidad de producto en el carrito actualizada exitosamente
+        "400":
+          description: Error en los datos proporcionados
+        '403':
+          description: Solo pueden acceder los usuario con rol USER o PREMIUM.
+        "404":
+          description: Carrito o producto no encontrado en el carrito
+        "500":
+          description: Error interno del servidor
+  /api/carts/{cid}/purchase:
+    post:
+      summary: Finalizar la compra del carrito
+      description: Ruta protegida, solo usuarios PREMIUM o USER pueden acceder. iniciar sesion con el rol correspodiente antes de realizar pruebas
+      security:
+        - SessionAuth: []
+      tags:
+        - Carrito
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          schema:
+            type: string
+          description: ID del carrito a comprar
+      responses:
+        '200':
+          description: Compra completada con éxito
+        '403':
+          description: Solo pueden acceder los usuario con rol USER o PREMIUM.
+        '404':
+          description: Carrito no encontrado
+        '500':
+          description: Error interno del servidor

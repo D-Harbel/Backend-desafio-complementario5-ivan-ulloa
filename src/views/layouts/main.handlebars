@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    {{{body}}}
+    <br><br>
+
+    {{#unless isAuthenticated}}
+    <a href="/">Home</a>
+    <a href="/login">Login</a>
+    <a href="/registrate">Registrarse</a>
+    <a href="/api-docs" target="_blank">documentación</a>
+    {{else}}
+    <a href="/">Home</a>
+    <a href="/perfil">Perfil</a>
+    <a href="/chat">Chat</a>
+    <a href="/api-docs" target="_blank">Documentación</a>
+    <a href="/views/products">Productos</a>
+    <a href="/purchase">Purchase</a>
+    <a href="/api/sessions/logout">Logout</a>
+    {{/unless}}
+</body>
+
+</html>

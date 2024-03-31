@@ -1,0 +1,23 @@
+<h2>Repita su nueva contraseña:</h2>
+<hr>
+
+{{#if error}}
+    <div style="color: red;">{{error}}</div>
+{{/if}}
+<form action="/api/sessions/ResPass03" method="post">
+    <input type="password" name="password" id="password" placeholder="Nueva contraseña">
+    <input type="password" name="password2" id="password2" placeholder="Repita la contraseña">
+    <input type="text" name="token" id="token" hidden>
+    <br>
+    <input type="submit" value="Resetear">
+</form>
+
+<script>
+    if(!token){
+        alert("error")
+    }else{
+        console.log(token)
+        let inputToken=document.getElementById("token")
+        inputToken.value=token
+    }
+</script>
