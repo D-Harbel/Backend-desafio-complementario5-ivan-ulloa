@@ -35,7 +35,7 @@ class userController {
     }
     
     hasAllDocuments(user) {
-        const requiredDocuments = ['identificacion.png', 'comprobante de domicilio.jpg','comprobante de estado de cuenta.png'];
+        const requiredDocuments = ['identificacion', 'comprobante de domicilio','comprobante de estado de cuenta'];
         const uploadedDocuments = user.documents.map(doc => doc.name);
         
         return requiredDocuments.every(doc => uploadedDocuments.includes(doc));
@@ -43,9 +43,35 @@ class userController {
 
     async uploadDocuments(req, res) {
         const userId = req.params.uid;
-    
+        
         try {
-            const uploadedFiles = req.files.map(file => ({ name: file.originalname, reference: file.path }));
+            if (!req.files || Object.keys(req.files).length === 0) {
+                return res.status(400).json({ error: 'No se han adjuntado archivos' });
+            }
+    
+            const uploadedFiles = [];
+            Object.keys(req.files).forEach(fieldname => {
+                const files = req.files[fieldname];
+                files.forEach(file => {
+                    let documentName;
+                    switch (fieldname) {
+                        case 'identificacion':
+                            documentName = 'identificacion';
+                            break;
+                        case 'comprobante de domicilio':
+                            documentName = 'comprobante de domicilio';
+                            break;
+                        case 'comprobante de estado de cuenta':
+                            documentName = 'comprobante de estado de cuenta';
+                            break;
+                        default:
+                            const fileNameWithoutExtension = file.originalname.split('.').slice(0, -1).join('.');
+                            documentName = fileNameWithoutExtension;
+                            break;
+                    }
+                    uploadedFiles.push({ name: documentName, reference: file.path });
+                });
+            });
     
             const updatedUser = await UserModel.findByIdAndUpdate(
                 userId,
